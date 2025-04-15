@@ -7,18 +7,42 @@
 // Data
 const account1 = {
   owner: 'Jonas Schmedtmann',
-  movements: [200, 450, -400, 3000, -650, -130, 70, 1300],
+  movements: [200, 455.23, -306.5, 25000, -642.21, -133.9, 79.97, 1300],
   interestRate: 1.2, // %
   pin: 1111,
-  type: 'premium',
+
+  movementsDates: [
+    '2019-11-18T21:31:17.178Z',
+    '2019-12-23T07:42:02.383Z',
+    '2020-01-28T09:15:04.904Z',
+    '2020-04-01T10:17:24.185Z',
+    '2020-05-08T14:11:59.604Z',
+    '2020-05-27T17:01:17.194Z',
+    '2020-07-11T23:36:17.929Z',
+    '2025-04-14T10:51:36.790Z',
+  ],
+  currency: 'EUR',
+  locale: 'pt-PT', // de-DE
 };
 
 const account2 = {
-  owner: 'Jessica Davis',
+  owner: 'Jayant Dhake',
   movements: [5000, 3400, -150, -790, -3210, -1000, 8500, -30],
   interestRate: 1.5,
   pin: 2222,
-  type: 'standard',
+
+  movementsDates: [
+    '2019-11-01T13:15:33.035Z',
+    '2019-11-30T09:48:16.867Z',
+    '2019-12-25T06:04:23.907Z',
+    '2020-01-25T14:18:46.235Z',
+    '2020-02-05T16:33:06.386Z',
+    '2020-04-10T14:43:26.374Z',
+    '2020-06-25T18:49:59.371Z',
+    '2020-07-26T12:01:20.894Z',
+  ],
+  currency: 'USD',
+  locale: 'mr-IN',
 };
 
 const account3 = {
@@ -27,6 +51,18 @@ const account3 = {
   interestRate: 0.7,
   pin: 3333,
   type: 'premium',
+  movementsDates: [
+    '2019-11-18T21:31:17.178Z',
+    '2019-12-23T07:42:02.383Z',
+    '2020-01-28T09:15:04.904Z',
+    '2020-04-01T10:17:24.185Z',
+    '2020-05-08T14:11:59.604Z',
+    '2020-05-27T17:01:17.194Z',
+    '2020-07-11T23:36:17.929Z',
+    '2020-07-12T10:51:36.790Z',
+  ],
+  currency: 'EUR',
+  locale: 'de-DE', // de-DE
 };
 
 const account4 = {
@@ -35,6 +71,18 @@ const account4 = {
   interestRate: 1,
   pin: 4444,
   type: 'basic',
+  movementsDates: [
+    '2019-11-01T13:15:33.035Z',
+    '2019-11-30T09:48:16.867Z',
+    '2019-12-25T06:04:23.907Z',
+    '2020-01-25T14:18:46.235Z',
+    '2020-02-05T16:33:06.386Z',
+    '2020-04-10T14:43:26.374Z',
+    '2020-06-25T18:49:59.371Z',
+    '2020-07-26T12:01:20.894Z',
+  ],
+  currency: 'USD',
+  locale: 'en-US',
 };
 
 const accounts = [account1, account2, account3, account4];
@@ -65,29 +113,80 @@ const inputLoanAmount = document.querySelector('.form__input--loan-amount');
 const inputCloseUsername = document.querySelector('.form__input--user');
 const inputClosePin = document.querySelector('.form__input--pin');
 
+/////////////////////////////////////////////////
+/////////////////////////////////////////////////
+
 //jussst
-labelDate.innerHTML = '';
-labelDate.insertAdjacentHTML('afterbegin', new Date());
+// labelDate.innerHTML = '';
+// labelDate.insertAdjacentHTML('afterbegin', new Date());
 
+const formatMovementDate = function (date, locale) {
+  const calcDaysPassed = (date1, date2) =>
+    Math.round(Math.abs(date2 - date1) / (1000 * 60 * 60 * 24));
+
+  const daysPassed = calcDaysPassed(new Date(), date);
+  console.log(daysPassed);
+  if (daysPassed === 0) {
+    return 'Today';
+  }
+  if (daysPassed === 1) {
+    return 'Yesterday';
+  }
+  if (daysPassed <= 7) {
+    return `${daysPassed} days ago`;
+  } else {
+    // const day = `${date.getDate()}`.padStart(2, 0);
+    // const month = `${date.getMonth() + 1}`.padStart(2, 0);
+    // const year = date.getFullYear();
+    // return `${day}/${month}/${year}`;
+    return new Intl.DateTimeFormat(locale).format(date); //formatting Date here using Internationalization API
+  }
+};
 //---------
-const displayMovements = function (movements, sort = false) {
-  containerMovements.innerHTML = ''; //innerHTML is little bit similar to textContent but the difference is that textContent simply returns the text itself and the innerHTML property returns everything including the html.
-  const movs = sort ? movements.slice().sort((a, b) => a - b) : movements;
 
-  movs.forEach(function (mov, i) {
-    const type = mov > 0 ? 'deposit' : 'withdrawal';
+const formatCurr = function (value, locale, currency) {
+  const formattedMov = new Intl.NumberFormat(locale, {
+    style: 'currency',
+    currency: currency,
+  }).format(value);
+  return formattedMov;
+};
+const displayMovements = function (acc, sort = false) {
+  containerMovements.innerHTML = ''; //innerHTML is little bit similar to textContent but the difference is that textContent simply returns the text itself and the innerHTML property returns everything including the html.
+  //combined object for movemnts and movementsDates
+  const combinedMovsDates = acc.movements.map((mov, i) => ({
+    movement: mov,
+    movementDate: acc.movementsDates.at(i),
+  }));
+  console.log(combinedMovsDates);
+
+  if (sort) {
+    combinedMovsDates.sort((a, b) => a.movement - b.movement);
+  }
+
+  // const movs = sort
+  //   ? acc.movements.slice().sort((a, b) => a - b)
+  //   : acc.movements;
+
+  combinedMovsDates.forEach(function (obj, i) {
+    const { movement, movementDate } = obj;
+    const type = movement > 0 ? 'deposit' : 'withdrawal';
+    const date = new Date(movementDate);
+    const displayDate = formatMovementDate(date, acc.locale);
+    const formattedMov = formatCurr(movement, acc.locale, acc.currency);
 
     const html = `
       <div class="movements__row">
         <div class="movements__type movements__type--${type}">${
       i + 1
     } ${type}</div>
-        <div class="movements__value">${mov}€</div>
+    <div class="movements__date">${displayDate}</div>
+        <div class="movements__value">${formattedMov}</div>
       </div>
     `;
 
     containerMovements.insertAdjacentHTML('afterbegin', html); //for this google and check mdn
-    console.log(containerMovements.innerHTML); //will returns all of the HTML.
+    // console.log(containerMovements.innerHTML); //will returns all of the HTML.
   });
 };
 
@@ -101,11 +200,14 @@ const calcDisplaySummary = function (acc) {
       const ssa = acc + mov;
       return ssa;
     }, 0);
-  labelSumIn.textContent = incomes + '€';
+  // labelSumIn.textContent = incomes.toFixed(2) + '€';
+  labelSumIn.textContent = formatCurr(incomes, acc.locale, acc.currency);
+
   const out = acc.movements
     .filter(mov => mov < 0)
     .reduce((acc, mov) => acc + mov, 0);
-  labelSumOut.textContent = Math.abs(out) + '€';
+  // labelSumOut.textContent = Math.abs(out).toFixed(2) + '€';
+  labelSumOut.textContent = formatCurr(Math.abs(out), acc.locale, acc.currency);
   const interest = acc.movements
     .filter(mov => mov > 0)
     .map((deposit, i, arr) => {
@@ -120,7 +222,8 @@ const calcDisplaySummary = function (acc) {
       console.log('positive interests ' + arr); //positive interests 2.4,5.4,36,15.6
       return acc + intrsst;
     }, 0);
-  labelSumInterest.textContent = `${interest}€`;
+  // labelSumInterest.textContent = `${interest.toFixed(2)}€`;
+  labelSumInterest.textContent = formatCurr(interest, acc.locale, acc.currency);
 };
 
 //-------
@@ -140,12 +243,14 @@ console.log(accounts);
 
 const calcAndDisplayBalance = function (acc) {
   acc.balance = acc.movements.reduce((acc, mov) => acc + mov, 0); //why we CAN SET this property on the ACTUAL ACCOUNT object, by the variable that we received as a function argument?????????????----------->SINCE all of these different references do actually point to exactly same object in memory heap
-  labelBalance.textContent = `${acc.balance}€`;
+  const formattedBal = formatCurr(acc.balance, acc.locale, acc.currency);
+  // labelBalance.textContent = `${acc.balance.toFixed(2)}€`;
+  labelBalance.textContent = formattedBal;
 };
 
 const updateUI = function (acc) {
   //display movements
-  displayMovements(acc.movements);
+  displayMovements(acc);
   // display balance
   calcAndDisplayBalance(acc);
   // display summary
@@ -156,20 +261,56 @@ const updateUI = function (acc) {
 /////////////////////////
 //Event Handlers Right here :
 //Global scope
-let currentAccount;
+let currentAccount = account1;
+updateUI(currentAccount);
+containerApp.style.opacity = 100;
+
+// /experimenting with the Internationalization API
+//ISO language code table----lingoes
+const now = new Date();
+// const options = {
+//   hour: 'numeric',
+//   minute: 'numeric',
+//   day: 'numeric',
+//   month: 'numeric',
+//   year: 'numeric',
+//   weekday: 'long',
+// };
+// const locale = navigator.language;
+// console.log(locale);
+// //'mr-IN'
+// labelDate.textContent = new Intl.DateTimeFormat('mr-IN', options).format(now);
+
 btnLogin.addEventListener('click', function (e) {
   e.preventDefault(); //prevent form from submitting
   currentAccount = accounts.find(
     acc => acc.username === inputLoginUsername.value
   );
   console.log(currentAccount);
-  if (currentAccount?.pin === Number(inputLoginPin.value)) {
+  if (currentAccount?.pin === +inputLoginPin.value) {
     //display UI and Welcome Message
     labelWelcome.textContent = `Welcome Back, ${
       currentAccount.owner.split(' ')[0]
     }`;
     containerApp.style.opacity = 100;
 
+    //create current date and time
+    const now = new Date();
+    const options = {
+      hour: 'numeric',
+      minute: 'numeric',
+      day: 'numeric',
+      month: 'long',
+      year: 'numeric',
+      weekday: 'long',
+    };
+    const locale = navigator.language;
+    console.log(locale);
+    //'mr-IN'
+    labelDate.textContent = new Intl.DateTimeFormat(
+      currentAccount.locale,
+      options
+    ).format(now);
     //clear input fields
     inputLoginUsername.value = inputLoginPin.value = '';
     inputLoginPin.blur();
@@ -180,7 +321,7 @@ btnLogin.addEventListener('click', function (e) {
 
 btnTransfer.addEventListener('click', function (e) {
   e.preventDefault();
-  const amount = Number(inputTransferAmount.value);
+  const amount = +inputTransferAmount.value;
   const receiverAcc = accounts.find(
     acc => acc.username === inputTransferTo.value
   );
@@ -196,6 +337,11 @@ btnTransfer.addEventListener('click', function (e) {
     currentAccount.movements.push(-amount);
     receiverAcc.movements.push(amount);
 
+    //add transfer date
+
+    currentAccount.movementsDates.push(new Date().toISOString());
+    receiverAcc.movementsDates.push(new Date().toISOString());
+
     //update ui
 
     updateUI(currentAccount);
@@ -204,12 +350,16 @@ btnTransfer.addEventListener('click', function (e) {
 
 btnLoan.addEventListener('click', function (e) {
   e.preventDefault();
-  const amount = Number(inputLoanAmount.value);
+  const amount = Math.floor(inputLoanAmount.value); //also does the type coercion
   if (amount > 0 && currentAccount.movements.some(mov => mov >= amount * 0.1)) {
-    //add the movement
-    currentAccount.movements.push(amount);
-    //update UI
-    updateUI(currentAccount);
+    setTimeout(function () {
+      //add the movement
+      currentAccount.movements.push(amount);
+      //add loan date
+      currentAccount.movementsDates.push(new Date().toISOString());
+      //update UI
+      updateUI(currentAccount);
+    }, 10000);
   }
   inputLoanAmount.value = '';
 });
@@ -222,7 +372,7 @@ btnClose.addEventListener('click', function (e) {
   console.log('Delete');
   if (
     inputCloseUsername.value === currentAccount.username &&
-    Number(inputClosePin.value) === currentAccount.pin
+    +inputClosePin.value === currentAccount.pin
   ) {
     const index = accounts.findIndex(
       acc => acc.username === currentAccount.username
@@ -239,12 +389,20 @@ btnClose.addEventListener('click', function (e) {
 let sorted = false;
 btnSort.addEventListener('click', function (e) {
   e.preventDefault();
-  displayMovements(currentAccount.movements, !sorted);
+  displayMovements(currentAccount, !sorted);
   sorted = !sorted;
 });
+/////////////////////////////////////////////////
+/////////////////////////////////////////////////
+/////////////////////////////////////////////////
+/////////////////////////////////////////////////
+/////////////////////////////////////////////////
+/////////////////////////////////////////////////
+/////////////////////////////////////////////////
+/////////////////////////////////////////////////
 
-/////////////////////////////////////////////////
-/////////////////////////////////////////////////
+//////////////////////////////////////////////////////////////////////
+
 // LECTURES
 
 /////////////////////////////////////////////////
@@ -302,7 +460,7 @@ const letters = arr1.concat(arr2);
 console.log(letters);
 console.log([...arr1, ...arr2]);
 
-// JOIN
+// JOIN-------->USE JOIN Methodto convert array to string
 console.log(letters.join(' - ')); //p - q - r - s - t - u - v - m - l - i - k - j
 /////////////////////////////////////////////////
 /////////////////////////////////////////////////
@@ -1005,3 +1163,170 @@ console.log(reversedMovements);
 const newMovements = movements.with(1, 2000); //here
 console.log(newMovements); //
 console.log(movements);
+////////////////////////////////////////////////////////////////////////////
+//Array Methods Practice
+console.log('----------------------------1-------------------------------');
+
+// const bankDepositSum = accounts.map(acc => acc.movements).flat();
+const bankDepositSum = accounts
+  .flatMap(acc => acc.movements)
+  .filter(mov => mov > 0)
+  .reduce((acc, mov) => acc + mov, 0);
+console.log(bankDepositSum);
+console.log('-----------------------------2------------------------------');
+// const numDeposits1000 = accounts
+//   .flatMap(acc => acc.movements)
+//   .filter(mov => mov > 1000).length;
+
+const numDeposits1000 = accounts
+  .flatMap(acc => acc.movements)
+  // .reduce((count, current) => {
+  //   return current > 1000 ? count + 1 : count;
+  // }, 0);//will work
+  .reduce((count, current) => {
+    return current > 1000 ? ++count : count; //WONT work here since used increment operator
+  }, 0);
+console.log(numDeposits1000);
+
+let a = 10;
+console.log(a++); //10----will increment by one but will return the previous value
+console.log(a); //11
+console.log('---------------------------3--------------------------------');
+// how to use something other than a primitive value as the accumulator---here we used object in JS.
+const { deps, withs } = accounts
+  .flatMap(acc => acc.movements)
+  .reduce(
+    (sums, curr) => {
+      // curr > 0 ? (sums.deps += curr) : (sums.withs += curr);
+      sums[curr > 0 ? 'deps' : 'withs'] += curr;
+      return sums;
+    },
+    { deps: 0, withs: 0 }
+  );
+
+console.log(deps, withs);
+console.log('---------------------------4--------------------------------');
+//this is a nice title -> This Is a Nice Title
+const convertTitleCase = function (title) {
+  const capitalize = str => str[0].toUpperCase() + str.slice(1);
+  const exceptions = ['a', 'an', 'and', 'the', 'but', 'or', 'on', 'in', 'with'];
+  const titleCase = title
+    .toLowerCase()
+    .split(' ')
+    .map(word => (exceptions.includes(word) ? word : capitalize(word)))
+    .join(' ');
+  return capitalize(titleCase);
+};
+console.log(convertTitleCase('this is a nice title'));
+console.log(convertTitleCase('this is a LONG title but not too long'));
+console.log(convertTitleCase('and here is another title with an EXAMPLE'));
+///////////////////////////////////////
+///////////////////////////////////////
+// Coding Challenge #5
+
+/* 
+Julia and Kate are still studying dogs. This time they are want to figure out if the dogs in their are eating too much or too little food.
+
+- Formula for calculating recommended food portion: recommendedFood = weight ** 0.75 * 28. (The result is in grams of food, and the weight needs to be in kg)
+- Eating too much means the dog's current food portion is larger than the recommended portion, and eating too little is the opposite.
+- Eating an okay amount means the dog's current food portion is within a range 10% above and below the recommended portion (see hint).
+
+YOUR TASKS:
+1. Loop over the array containing dog objects, and for each dog, calculate the recommended food portion (recFood) and add it to the object as a new property. Do NOT create a new array, simply loop over the array (We never did this before, so think about how you can do this without creating a new array).
+2. Find Sarah's dog and log to the console whether it's eating too much or too little. HINT: Some dogs have multiple users, so you first need to find Sarah in the owners array, and so this one is a bit tricky (on purpose) 🤓
+3. Create an array containing all owners of dogs who eat too much (ownersTooMuch) and an array with all owners of dogs who eat too little (ownersTooLittle).
+4. Log a string to the console for each array created in 3., like this: "Matilda and Alice and Bob's dogs eat too much!" and "Sarah and John and Michael's dogs eat too little!"
+5. Log to the console whether there is ANY dog eating EXACTLY the amount of food that is recommended (just true or false)
+6. Log to the console whether ALL of the dogs are eating an OKAY amount of food (just true or false)
+7. Create an array containing the dogs that are eating an OKAY amount of food (try to reuse the condition used in 6.)
+8. Group the dogs into the following 3 groups: 'exact', 'too-much' and 'too-little', based on whether they are eating too much, too little or the exact amount of food, based on the recommended food portion.
+9. Group the dogs by the number of owners they have
+10. Sort the dogs array by recommended food portion in an ascending order. Make sure to NOT mutate the original array!
+
+HINT 1: Use many different tools to solve these challenges, you can use the summary lecture to choose between them 😉
+HINT 2: Being within a range 10% above and below the recommended portion means: current > (recommended * 0.90) && current < (recommended * 1.10). Basically, the current portion should be between 90% and 110% of the recommended portion.
+
+TEST DATA:
+const dogs = [
+  { weight: 22, curFood: 250, owners: ['Alice', 'Bob'] },
+  { weight: 8, curFood: 200, owners: ['Matilda'] },
+  { weight: 13, curFood: 275, owners: ['Sarah', 'John', 'Leo'] },
+  { weight: 18, curFood: 244, owners: ['Joe'] },
+  { weight: 32, curFood: 340, owners: ['Michael'] },
+];
+
+GOOD LUCK 😀
+*/
+
+/*
+const dogs = [
+  { weight: 22, curFood: 250, owners: ['Alice', 'Bob'] },
+  { weight: 8, curFood: 200, owners: ['Matilda'] },
+  { weight: 13, curFood: 275, owners: ['Sarah', 'John', 'Leo'] },
+  { weight: 18, curFood: 244, owners: ['Joe'] },
+  { weight: 32, curFood: 340, owners: ['Michael'] },
+];
+
+// 1.
+dogs.forEach(dog => (dog.recFood = Math.floor(dog.weight ** 0.75 * 28)));
+console.log(dogs);
+
+// 2.
+const dogSarah = dogs.find(dog => dog.owners.includes('Sarah'));
+console.log(
+  `Sarah's dog eats too ${
+    dogSarah.curFood > dogSarah.recFood ? 'much' : 'little'
+  }`
+);
+
+// 3.
+const ownersTooMuch = dogs
+  .filter(dog => dog.curFood > dog.recFood)
+  .flatMap(dog => dog.owners);
+const ownersTooLittle = dogs
+  .filter(dog => dog.curFood < dog.recFood)
+  .flatMap(dog => dog.owners);
+
+console.log(ownersTooMuch);
+console.log(ownersTooLittle);
+
+// 4.
+console.log(`${ownersTooMuch.join(' and ')}'s dogs are eating too much`);
+console.log(`${ownersTooLittle.join(' and ')}'s dogs are eating too little`);
+
+// 5.
+console.log(dogs.some(dog => dog.curFood === dog.recFood));
+
+// 6.
+const checkEatingOkay = dog =>
+  dog.curFood < dog.recFood * 1.1 && dog.curFood > dog.recFood * 0.9;
+
+console.log(dogs.every(checkEatingOkay));
+
+// 7.
+const dogsEatingOkay = dogs.filter(checkEatingOkay);
+console.log(dogsEatingOkay);
+
+// 8.
+const dogsGroupedByPortion = Object.groupBy(dogs, dog => {
+  if (dog.curFood > dog.recFood) {
+    return 'too-much';
+  } else if (dog.curFood < dog.recFood) {
+    return 'too-little';
+  } else {
+    return 'exact';
+  }
+});
+console.log(dogsGroupedByPortion);
+
+// 9.
+const dogsGroupedByOwners = Object.groupBy(
+  dogs,
+  dog => `${dog.owners.length}-owners`
+);
+console.log(dogsGroupedByOwners);
+
+// 10.
+const dogsSorted = dogs.toSorted((a, b) => a.recFood - b.recFood);
+console.log(dogsSorted);
+*/
