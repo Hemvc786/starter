@@ -3,10 +3,9 @@
 /////////////////////////////////////////////////
 /////////////////////////////////////////////////
 // BANKIST APP
-
-// Data
+//DATA
 const account1 = {
-  owner: 'Jonas Schmedtmann',
+  owner: 'Hemant Vijay Chaudhari',
   movements: [200, 455.23, -306.5, 25000, -642.21, -133.9, 79.97, 1300],
   interestRate: 1.2, // %
   pin: 1111,
@@ -26,7 +25,7 @@ const account1 = {
 };
 
 const account2 = {
-  owner: 'Jayant Dhake',
+  owner: 'Lokesh Tukaram Chaudhari',
   movements: [5000, 3400, -150, -790, -3210, -1000, 8500, -30],
   interestRate: 1.5,
   pin: 2222,
@@ -46,7 +45,7 @@ const account2 = {
 };
 
 const account3 = {
-  owner: 'Steven Thomas Williams',
+  owner: 'Tejas Kailas Bundele',
   movements: [200, -200, 340, -300, -20, 50, 400, -460],
   interestRate: 0.7,
   pin: 3333,
@@ -66,7 +65,7 @@ const account3 = {
 };
 
 const account4 = {
-  owner: 'Sarah Smith',
+  owner: 'Satish Amrutlal Chandan',
   movements: [430, 1000, 700, 50, 90],
   interestRate: 1,
   pin: 4444,
@@ -84,7 +83,6 @@ const account4 = {
   currency: 'USD',
   locale: 'en-US',
 };
-
 const accounts = [account1, account2, account3, account4];
 
 // Elements
@@ -258,12 +256,38 @@ const updateUI = function (acc) {
   console.log('LOGIN');
 };
 
+const startLogOutTimer = function () {
+  //setting the time to 5 mins
+  let time = 300;
+
+  const tick = function () {
+    const min = String(Math.trunc(time / 60)).padStart(2, 0);
+    const sec = String(time % 60).padStart(2, 0);
+    //in each callback call print the remaining time to the User Interface
+    labelTimer.textContent = `${min}:${sec}`;
+
+    //when timer expires, or when timer reaches the 0 seconds, then stop timer and logout user
+    if (time === 0) {
+      clearInterval(timer);
+      labelWelcome.textContent = 'Log in to get started';
+      containerApp.style.opacity = 0;
+    }
+    //decrease 1 sec'
+    time--;
+  };
+
+  //call the timer every seconds
+  tick();
+  timer = setInterval(tick, 1000);
+  return timer;
+};
+
 /////////////////////////
 //Event Handlers Right here :
 //Global scope
-let currentAccount = account1;
-updateUI(currentAccount);
-containerApp.style.opacity = 100;
+let currentAccount, timer;
+// updateUI(currentAccount);
+// containerApp.style.opacity = 100;
 
 // /experimenting with the Internationalization API
 //ISO language code table----lingoes
@@ -314,7 +338,11 @@ btnLogin.addEventListener('click', function (e) {
     //clear input fields
     inputLoginUsername.value = inputLoginPin.value = '';
     inputLoginPin.blur();
-    // startLogOutTimer();
+
+    //Timer
+    if (timer) clearInterval(timer);
+    timer = startLogOutTimer();
+    //update UI
     updateUI(currentAccount);
   }
 });
@@ -345,6 +373,9 @@ btnTransfer.addEventListener('click', function (e) {
     //update ui
 
     updateUI(currentAccount);
+    //reset the timer
+    clearInterval(timer);
+    timer = startLogOutTimer();
   }
 });
 
@@ -359,6 +390,9 @@ btnLoan.addEventListener('click', function (e) {
       currentAccount.movementsDates.push(new Date().toISOString());
       //update UI
       updateUI(currentAccount);
+      //reset the timer
+      clearInterval(timer);
+      timer = startLogOutTimer();
     }, 10000);
   }
   inputLoanAmount.value = '';
