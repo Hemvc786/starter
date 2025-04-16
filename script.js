@@ -314,7 +314,7 @@ btnLogin.addEventListener('click', function (e) {
     //clear input fields
     inputLoginUsername.value = inputLoginPin.value = '';
     inputLoginPin.blur();
-
+    // startLogOutTimer();
     updateUI(currentAccount);
   }
 });
